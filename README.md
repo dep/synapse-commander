@@ -8,7 +8,7 @@ Inspired by classics like Norton Commander and Midnight Commander.
 
 ## Download
 
-Check out the [Releases](https://github.com/dep/my-commander/releases/latest), download the app into your `/Applications`.
+Go to the [Releases](https://github.com/dep/my-commander/releases/latest), download the app, install it.
 
 ## Build & Run
 
