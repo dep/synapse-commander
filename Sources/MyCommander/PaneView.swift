@@ -137,6 +137,90 @@ struct PaneView: View {
         if entry.isAlias || entry.isSymlink {
             return entry.isDirectory ? "folder.fill.badge.questionmark" : "arrowshape.turn.up.right"
         }
-        return entry.isDirectory ? "folder.fill" : "doc"
+        if entry.isDirectory { return "folder.fill" }
+        return Self.iconForExtension(entry.url.pathExtension.lowercased())
+    }
+
+    private static let extensionIcons: [String: String] = [
+        // Images
+        "png": "photo", "jpg": "photo", "jpeg": "photo", "gif": "photo",
+        "bmp": "photo", "tiff": "photo", "tif": "photo", "webp": "photo",
+        "heic": "photo", "heif": "photo", "svg": "photo", "ico": "photo",
+        "raw": "photo", "cr2": "photo", "nef": "photo", "arw": "photo",
+        // Video
+        "mp4": "film", "mov": "film", "avi": "film", "mkv": "film",
+        "wmv": "film", "flv": "film", "webm": "film", "m4v": "film",
+        "mpg": "film", "mpeg": "film",
+        // Audio
+        "mp3": "music.note", "wav": "music.note", "flac": "music.note",
+        "aac": "music.note", "ogg": "music.note", "m4a": "music.note",
+        "wma": "music.note", "aiff": "music.note", "opus": "music.note",
+        // Archives
+        "zip": "doc.zipper", "tar": "doc.zipper", "gz": "doc.zipper",
+        "tgz": "doc.zipper", "bz2": "doc.zipper", "xz": "doc.zipper",
+        "7z": "doc.zipper", "rar": "doc.zipper", "dmg": "doc.zipper",
+        "iso": "doc.zipper", "pkg": "doc.zipper",
+        // Documents
+        "pdf": "doc.richtext",
+        "doc": "doc.text", "docx": "doc.text", "rtf": "doc.text",
+        "odt": "doc.text", "pages": "doc.text",
+        "txt": "doc.plaintext", "md": "doc.plaintext", "markdown": "doc.plaintext",
+        "log": "doc.plaintext", "rst": "doc.plaintext",
+        // Spreadsheets
+        "xls": "tablecells", "xlsx": "tablecells", "csv": "tablecells",
+        "tsv": "tablecells", "ods": "tablecells", "numbers": "tablecells",
+        // Presentations
+        "ppt": "rectangle.on.rectangle", "pptx": "rectangle.on.rectangle",
+        "odp": "rectangle.on.rectangle", "key": "rectangle.on.rectangle",
+        // Code
+        "swift": "chevron.left.forwardslash.chevron.right",
+        "js": "chevron.left.forwardslash.chevron.right",
+        "jsx": "chevron.left.forwardslash.chevron.right",
+        "ts": "chevron.left.forwardslash.chevron.right",
+        "tsx": "chevron.left.forwardslash.chevron.right",
+        "py": "chevron.left.forwardslash.chevron.right",
+        "rb": "chevron.left.forwardslash.chevron.right",
+        "go": "chevron.left.forwardslash.chevron.right",
+        "rs": "chevron.left.forwardslash.chevron.right",
+        "java": "chevron.left.forwardslash.chevron.right",
+        "kt": "chevron.left.forwardslash.chevron.right",
+        "c": "chevron.left.forwardslash.chevron.right",
+        "h": "chevron.left.forwardslash.chevron.right",
+        "cpp": "chevron.left.forwardslash.chevron.right",
+        "hpp": "chevron.left.forwardslash.chevron.right",
+        "cs": "chevron.left.forwardslash.chevron.right",
+        "php": "chevron.left.forwardslash.chevron.right",
+        "lua": "chevron.left.forwardslash.chevron.right",
+        "sh": "chevron.left.forwardslash.chevron.right",
+        "bash": "chevron.left.forwardslash.chevron.right",
+        "zsh": "chevron.left.forwardslash.chevron.right",
+        "fish": "chevron.left.forwardslash.chevron.right",
+        "sql": "chevron.left.forwardslash.chevron.right",
+        // Markup / data
+        "html": "curlybraces", "htm": "curlybraces", "xml": "curlybraces",
+        "json": "curlybraces", "yaml": "curlybraces", "yml": "curlybraces",
+        "toml": "curlybraces", "plist": "curlybraces",
+        "css": "paintpalette", "scss": "paintpalette", "sass": "paintpalette",
+        "less": "paintpalette",
+        // Fonts
+        "ttf": "textformat", "otf": "textformat", "woff": "textformat",
+        "woff2": "textformat", "eot": "textformat",
+        // Executables / binaries
+        "app": "app.badge", "exe": "terminal", "bin": "terminal",
+        "out": "terminal", "dll": "terminal", "so": "terminal", "dylib": "terminal",
+        // Disk/system
+        "sqlite": "cylinder", "db": "cylinder",
+        // Config
+        "env": "gearshape", "ini": "gearshape", "conf": "gearshape", "cfg": "gearshape",
+        // Design
+        "psd": "paintbrush", "ai": "paintbrush", "sketch": "paintbrush",
+        "fig": "paintbrush", "xd": "paintbrush",
+        // E-books
+        "epub": "book", "mobi": "book", "azw": "book", "azw3": "book"
+    ]
+
+    private static func iconForExtension(_ ext: String) -> String {
+        if ext.isEmpty { return "doc" }
+        return extensionIcons[ext] ?? "doc"
     }
 }
