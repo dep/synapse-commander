@@ -32,3 +32,5 @@ Icon?
 .agents/USER_RULES.md
 .agents/TEAM_RULES.md
 .agents/LEARNING_LOG.md
+
+.env
