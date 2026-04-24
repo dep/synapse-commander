@@ -3,6 +3,12 @@
 A sleek, keyboard-driven dual-pane file manager for macOS. Dark-theme friendly.
 Inspired by classics like Norton Commander and Midnight Commander.
 
+<img width="680" height="491" alt="image" src="https://github.com/user-attachments/assets/a8ff7b22-f60c-46ff-a9f9-71d1b8e3a9f4" />
+
+## Download
+
+Check out the [Releases](https://github.com/dep/my-commander/releases/latest), download the app into your `/Applications`.
+
 ## Build & Run
 
 Requires Xcode command-line tools and macOS 14+.
