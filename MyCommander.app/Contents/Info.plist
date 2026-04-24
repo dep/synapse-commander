@@ -4,6 +4,10 @@
 <dict>
     <key>CFBundleExecutable</key>
     <string>MyCommander</string>
+    <key>CFBundleIconFile</key>
+    <string>MyCommander</string>
+    <key>CFBundleIconName</key>
+    <string>MyCommander</string>
     <key>CFBundleIdentifier</key>
     <string>com.dpeck.mycommander</string>
     <key>CFBundleName</key>
