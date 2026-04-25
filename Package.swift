@@ -14,6 +14,11 @@ let package = Package(
                 .product(name: "Sparkle", package: "Sparkle")
             ],
             path: "Sources/MyCommander"
+        ),
+        .testTarget(
+            name: "MyCommanderTests",
+            dependencies: ["MyCommander"],
+            path: "Tests/MyCommanderTests"
         )
     ]
 )
