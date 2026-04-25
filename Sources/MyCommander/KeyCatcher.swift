@@ -59,6 +59,7 @@ enum Keys {
     static let down: UInt16     = UInt16(kVK_DownArrow)
     static let escape: UInt16   = UInt16(kVK_Escape)
     static let f2: UInt16       = UInt16(kVK_F2)
+    static let f3: UInt16       = UInt16(kVK_F3)
     static let f5: UInt16       = UInt16(kVK_F5)
     static let f6: UInt16       = UInt16(kVK_F6)
     static let f7: UInt16       = UInt16(kVK_F7)

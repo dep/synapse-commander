@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var showFavorites = false
     @State private var showHelp = false
     @State private var showGoTo = false
+    @State private var showViewer = false
 
     // prompt state
     @State private var prompt: PromptKind?
@@ -113,6 +114,21 @@ struct ContentView: View {
                     .shadow(radius: 20)
             }
 
+            if showViewer {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+                    .onTapGesture { showViewer = false }
+                FileViewerView(model: activeModel,
+                               onDismiss: { showViewer = false })
+                    .background(Color(nsColor: .windowBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                    )
+                    .shadow(radius: 20)
+            }
+
             if !typeAhead.isEmpty {
                 VStack {
                     Spacer()
@@ -149,7 +165,7 @@ struct ContentView: View {
     // MARK: - Key handling
 
     private func handleKey(_ e: KeyEvent) -> Bool {
-        if prompt != nil || showFavorites || showHelp || showGoTo { return false }  // let the sheet handle input
+        if prompt != nil || showFavorites || showHelp || showGoTo || showViewer { return false }  // let the sheet handle input
 
         // "?" opens help (no command/option/control modifiers; shift is fine)
         if e.characters == "?",
@@ -294,6 +310,14 @@ struct ContentView: View {
             if let c = activeModel.cursor, !activeModel.isParentRow(c) {
                 promptText = c.lastPathComponent
                 prompt = .rename(c)
+            }
+            return true
+        case Keys.f3:
+            typeAhead = ""
+            if let c = activeModel.cursor,
+               let entry = activeModel.entries.first(where: { $0.url == c }),
+               !entry.isParent, !entry.isDirectory {
+                showViewer = true
             }
             return true
         case Keys.f5:

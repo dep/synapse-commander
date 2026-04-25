@@ -30,6 +30,7 @@ struct HelpView: View {
                     ])
                     section("File Operations", rows: [
                         ("F2",               "Rename cursor row"),
+                        ("F3",               "Preview file (image/video/audio/text)"),
                         ("F5",               "Copy selection to other pane"),
                         ("F6",               "Move selection to other pane"),
                         ("F7",               "Create new folder"),
