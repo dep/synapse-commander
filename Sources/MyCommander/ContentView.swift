@@ -50,11 +50,13 @@ struct ContentView: View {
                 PaneView(model: left,
                          isActive: active == .left,
                          onActivate: { active = .left },
-                         onOpen: { open($0, in: left) })
+                         onOpen: { open($0, in: left) },
+                         onDrop: { urls, dest in handleDrop(urls: urls, destination: dest) })
                 PaneView(model: right,
                          isActive: active == .right,
                          onActivate: { active = .right },
-                         onOpen: { open($0, in: right) })
+                         onOpen: { open($0, in: right) },
+                         onDrop: { urls, dest in handleDrop(urls: urls, destination: dest) })
             }
             .padding(8)
 
@@ -425,6 +427,33 @@ struct ContentView: View {
         let dir: URL = entry.isDirectory ? entry.url : entry.url.deletingLastPathComponent()
         let destModel = (pane == .left) ? left : right
         destModel.navigate(to: dir)
+    }
+
+    /// Handle a drag-and-drop landing on `destination` (a directory URL).
+    /// Default action is move; Cmd or Option held during drop = copy
+    /// (matches Finder's convention).
+    /// Filters out drops where source parent == destination (same-dir no-op)
+    /// and drops where source == destination (can't drop a folder into itself).
+    private func handleDrop(urls: [URL], destination: URL) {
+        let filtered = urls.filter { url in
+            url.deletingLastPathComponent().standardizedFileURL.path
+                != destination.standardizedFileURL.path
+                && url.standardizedFileURL.path != destination.standardizedFileURL.path
+        }
+        guard !filtered.isEmpty else { return }
+        let mods = NSEvent.modifierFlags
+        let isCopy = mods.contains(.command) || mods.contains(.option)
+        do {
+            if isCopy {
+                try FileOps.copy(filtered, to: destination)
+            } else {
+                try FileOps.move(filtered, to: destination)
+            }
+            left.reload(); right.reload()
+            left.selection.removeAll(); right.selection.removeAll()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func performMkdir(_ name: String) {

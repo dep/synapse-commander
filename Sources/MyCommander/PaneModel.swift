@@ -208,4 +208,14 @@ final class PaneModel: ObservableObject {
     func selectAll() {
         selection = Set(entries.filter { !$0.isParent }.map { $0.url })
     }
+
+    /// Replace selection with the inclusive range of rows between `anchor` and `target`.
+    /// Used for shift-click. Skips parent row.
+    func selectRange(from anchor: URL, to target: URL) {
+        guard let aIdx = entries.firstIndex(where: { $0.url == anchor }),
+              let tIdx = entries.firstIndex(where: { $0.url == target })
+        else { return }
+        let (lo, hi) = aIdx <= tIdx ? (aIdx, tIdx) : (tIdx, aIdx)
+        selection = Set(entries[lo...hi].filter { !$0.isParent }.map { $0.url })
+    }
 }

@@ -1,10 +1,15 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct PaneView: View {
     @ObservedObject var model: PaneModel
     let isActive: Bool
     let onActivate: () -> Void
     let onOpen: (FileEntry) -> Void
+    let onDrop: ([URL], URL) -> Void
+
+    @State private var paneDropHover = false
+    @State private var rowDropHover: URL?
 
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -23,12 +28,39 @@ struct PaneView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .overlay(
             RoundedRectangle(cornerRadius: 6)
-                .stroke(isActive ? Color.accentColor : Color.white.opacity(0.08),
-                        lineWidth: isActive ? 1.5 : 1)
+                .stroke(borderColor, lineWidth: paneDropHover ? 2 : (isActive ? 1.5 : 1))
         )
         .cornerRadius(6)
         .contentShape(Rectangle())
         .onTapGesture { onActivate() }
+        .onDrop(of: [.fileURL], isTargeted: $paneDropHover) { providers in
+            handleDropProviders(providers, destination: model.directory)
+        }
+    }
+
+    private var borderColor: Color {
+        if paneDropHover { return Color.green }
+        return isActive ? Color.accentColor : Color.white.opacity(0.08)
+    }
+
+    /// Decode an array of NSItemProviders carrying file URLs and pass them to the drop callback.
+    /// Returns true to accept the drop. Decoding is async so we collect URLs then call back on main.
+    private func handleDropProviders(_ providers: [NSItemProvider], destination: URL) -> Bool {
+        guard !providers.isEmpty else { return false }
+        var urls: [URL] = []
+        let group = DispatchGroup()
+        for p in providers where p.canLoadObject(ofClass: URL.self) {
+            group.enter()
+            _ = p.loadObject(ofClass: URL.self) { item, _ in
+                if let url = item as URL? { urls.append(url) }
+                group.leave()
+            }
+        }
+        group.notify(queue: .main) {
+            guard !urls.isEmpty else { return }
+            onDrop(urls, destination)
+        }
+        return true
     }
 
     private var header: some View {
@@ -70,7 +102,7 @@ struct PaneView: View {
                 }
             }
             .onChange(of: model.cursor) { _, newValue in
-                if let u = newValue { withAnimation(.linear(duration: 0.05)) { proxy.scrollTo(u, anchor: .center) } }
+                if let u = newValue { proxy.scrollTo(u, anchor: nil) }
             }
         }
     }
@@ -79,6 +111,7 @@ struct PaneView: View {
     private func row(_ entry: FileEntry) -> some View {
         let isCursor = (model.cursor == entry.url) && isActive
         let isSelected = model.selection.contains(entry.url)
+        let isDropHover = (rowDropHover == entry.url)
 
         HStack(spacing: 8) {
             Image(systemName: iconName(for: entry))
@@ -104,12 +137,52 @@ struct PaneView: View {
         .foregroundStyle(isSelected ? Color.yellow : Color.primary)
         .background(
             RoundedRectangle(cornerRadius: 3)
-                .fill(isCursor ? Color.accentColor.opacity(0.25) : Color.clear)
+                .fill(rowBackground(isCursor: isCursor, isDropHover: isDropHover))
                 .padding(.horizontal, 4)
         )
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { onOpen(entry) }
-        .onTapGesture { onActivate(); model.cursor = entry.url }
+        // Single-click fires instantly; double-click runs simultaneously.
+        // Stacking .onTapGesture(count: 2) above .onTapGesture(count: 1) makes
+        // SwiftUI wait the system double-click interval before firing the
+        // single-click — feels laggy. simultaneousGesture sidesteps that.
+        .onTapGesture { handleRowClick(entry) }
+        .simultaneousGesture(TapGesture(count: 2).onEnded { onOpen(entry) })
+        .modifier(RowDragModifier(entry: entry, model: model))
+        .modifier(RowDropModifier(entry: entry,
+                                  rowDropHover: $rowDropHover,
+                                  onDropProviders: handleDropProviders))
+    }
+
+    private func rowBackground(isCursor: Bool, isDropHover: Bool) -> Color {
+        if isDropHover { return Color.green.opacity(0.35) }
+        if isCursor { return Color.accentColor.opacity(0.25) }
+        return Color.clear
+    }
+
+    /// Handle a single (non-double) row click. Reads modifier flags directly from
+    /// NSEvent since SwiftUI's .onTapGesture doesn't expose them.
+    /// - plain click: move cursor (clears any selection-via-shift state)
+    /// - shift-click: select inclusive range from anchor (or cursor) to clicked row
+    /// - cmd-click: toggle individual row selection
+    private func handleRowClick(_ entry: FileEntry) {
+        onActivate()
+        let mods = NSEvent.modifierFlags
+        let shift = mods.contains(.shift)
+        let cmd = mods.contains(.command)
+
+        if shift && !entry.isParent {
+            let anchor = model.shiftAnchor ?? model.cursor ?? entry.url
+            model.shiftAnchor = anchor
+            model.selectRange(from: anchor, to: entry.url)
+            model.cursor = entry.url
+        } else if cmd && !entry.isParent {
+            model.toggleSelect(entry.url)
+            model.cursor = entry.url
+            model.shiftAnchor = entry.url
+        } else {
+            model.shiftAnchor = entry.url
+            model.cursor = entry.url
+        }
     }
 
     private var footer: some View {
@@ -222,5 +295,170 @@ struct PaneView: View {
     private static func iconForExtension(_ ext: String) -> String {
         if ext.isEmpty { return "doc" }
         return extensionIcons[ext] ?? "doc"
+    }
+}
+
+/// Attaches a custom AppKit drag source to a row. Unlike SwiftUI's .onDrag,
+/// this lets us advertise the correct NSDragOperation (move by default,
+/// copy when Cmd or Option is held) so the system shows the right cursor —
+/// no spurious green "+" plus during a move.
+/// Bundles the entire selection if the dragged row is part of it.
+/// Skips parent (..) row.
+private struct RowDragModifier: ViewModifier {
+    let entry: FileEntry
+    @ObservedObject var model: PaneModel
+
+    func body(content: Content) -> some View {
+        if entry.isParent {
+            content
+        } else {
+            content.overlay(
+                DragSourceView(urlsProvider: { urlsToDrag() })
+            )
+        }
+    }
+
+    private func urlsToDrag() -> [URL] {
+        if model.selection.contains(entry.url) && model.selection.count > 1 {
+            return Array(model.selection)
+        }
+        return [entry.url]
+    }
+}
+
+/// Transparent NSView overlay that initiates an AppKit drag with explicit
+/// source operations. Reports `.move` by default, `.copy` when Cmd or Option
+/// is held — which drives the system cursor (no "+" badge during move).
+///
+/// The overlay declines hit-testing (returns nil) so SwiftUI receives all
+/// clicks normally. It uses a window-level mouse-event monitor to detect when
+/// a drag begins inside its bounds, then takes over for the drag session.
+private struct DragSourceView: NSViewRepresentable {
+    let urlsProvider: () -> [URL]
+
+    func makeNSView(context: Context) -> NSView {
+        let v = DragSourceNSView()
+        v.urlsProvider = urlsProvider
+        return v
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        (nsView as? DragSourceNSView)?.urlsProvider = urlsProvider
+    }
+
+    final class DragSourceNSView: NSView, NSDraggingSource {
+        var urlsProvider: (() -> [URL])?
+        private var mouseDownMonitor: Any?
+        private var mouseDraggedMonitor: Any?
+        private var lastMouseDown: NSEvent?
+
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+        }
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+        }
+
+        // Click-through: never claim a hit. SwiftUI handles all taps.
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            removeMonitors()
+            guard window != nil else { return }
+
+            mouseDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+                guard let self = self else { return event }
+                if self.eventIsInBounds(event) {
+                    self.lastMouseDown = event
+                } else {
+                    self.lastMouseDown = nil
+                }
+                return event
+            }
+            mouseDraggedMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDragged) { [weak self] event in
+                guard let self = self,
+                      let down = self.lastMouseDown,
+                      self.eventIsInBounds(down),
+                      let urls = self.urlsProvider?(), !urls.isEmpty
+                else { return event }
+                // Require the cursor to travel a few pixels before starting a drag.
+                // Without this threshold, any sub-pixel jitter during a click triggers
+                // the drag session and interferes with simple selection clicks.
+                let dx = event.locationInWindow.x - down.locationInWindow.x
+                let dy = event.locationInWindow.y - down.locationInWindow.y
+                let distance = (dx * dx + dy * dy).squareRoot()
+                guard distance >= 4 else { return event }
+                // Only start once per gesture.
+                self.lastMouseDown = nil
+                self.startDrag(urls: urls, mouseDown: down)
+                return event
+            }
+        }
+
+        override func removeFromSuperview() {
+            removeMonitors()
+            super.removeFromSuperview()
+        }
+
+        private func removeMonitors() {
+            if let m = mouseDownMonitor { NSEvent.removeMonitor(m); mouseDownMonitor = nil }
+            if let m = mouseDraggedMonitor { NSEvent.removeMonitor(m); mouseDraggedMonitor = nil }
+        }
+
+        private func eventIsInBounds(_ event: NSEvent) -> Bool {
+            guard let window = window, event.window === window else { return false }
+            let pt = self.convert(event.locationInWindow, from: nil)
+            return self.bounds.contains(pt)
+        }
+
+        private func startDrag(urls: [URL], mouseDown: NSEvent) {
+            let items: [NSDraggingItem] = urls.map { url in
+                let item = NSDraggingItem(pasteboardWriter: url as NSURL)
+                let pt = self.convert(mouseDown.locationInWindow, from: nil)
+                item.draggingFrame = NSRect(x: pt.x - 8, y: pt.y - 8, width: 16, height: 16)
+                return item
+            }
+            beginDraggingSession(with: items, event: mouseDown, source: self)
+        }
+
+        // MARK: NSDraggingSource
+
+        func draggingSession(_ session: NSDraggingSession,
+                             sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+            switch context {
+            case .outsideApplication:
+                return [.copy]
+            case .withinApplication:
+                let mods = NSEvent.modifierFlags
+                if mods.contains(.command) || mods.contains(.option) {
+                    return [.copy]
+                }
+                return [.move]
+            @unknown default:
+                return [.move]
+            }
+        }
+    }
+}
+
+/// Adds .onDrop to directory rows so users can drop directly into a folder
+/// instead of the pane's current directory. Non-directories pass through.
+private struct RowDropModifier: ViewModifier {
+    let entry: FileEntry
+    @Binding var rowDropHover: URL?
+    let onDropProviders: ([NSItemProvider], URL) -> Bool
+
+    func body(content: Content) -> some View {
+        if entry.isDirectory && !entry.isParent {
+            content.onDrop(of: [.fileURL],
+                           isTargeted: Binding(
+                               get: { rowDropHover == entry.url },
+                               set: { rowDropHover = $0 ? entry.url : nil })) { providers in
+                onDropProviders(providers, entry.url)
+            }
+        } else {
+            content
+        }
     }
 }
