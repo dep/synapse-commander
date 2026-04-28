@@ -1,12 +1,12 @@
 import XCTest
-@testable import MyCommander
+@testable import SynapseCommander
 
 final class FileOpsTests: XCTestCase {
     private var tmp: URL!
     private let fm = FileManager.default
 
     override func setUpWithError() throws {
-        tmp = fm.temporaryDirectory.appendingPathComponent("MyCommanderTests-\(UUID().uuidString)")
+        tmp = fm.temporaryDirectory.appendingPathComponent("SynapseCommanderTests-\(UUID().uuidString)")
         try fm.createDirectory(at: tmp, withIntermediateDirectories: true)
     }
 

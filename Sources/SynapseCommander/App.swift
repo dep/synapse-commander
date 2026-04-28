@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct MyCommanderApp: App {
+struct SynapseCommanderApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var updater = UpdaterViewModel()
 

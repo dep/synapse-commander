@@ -1,4 +1,4 @@
-# My Commander
+# Synapse Commander
 
 A sleek, keyboard-driven dual-pane file manager for macOS. Dark-theme friendly.
 Inspired by classics like Norton Commander and Midnight Commander.
@@ -18,7 +18,7 @@ Requires Xcode command-line tools and macOS 14+.
 ./run.sh
 ```
 
-The script compiles a release binary, drops it into `My Commander.app/Contents/MacOS/`,
+The script compiles a release binary, drops it into `Synapse Commander.app/Contents/MacOS/`,
 and launches the app. You can also `swift run` directly for development.
 
 ## Keyboard Shortcuts
@@ -78,7 +78,7 @@ Press `?` inside the app at any time to see this same list as an in-app modal.
 | _Trash icon_ | Remove favorite |
 
 Favorites are persisted to
-`~/Library/Application Support/MyCommander/favorites.json`.
+`~/Library/Application Support/SynapseCommander/favorites.json`.
 
 ### Help
 | Key | Action |
@@ -105,11 +105,11 @@ Favorites are persisted to
 my-commander/
 ├── Package.swift
 ├── run.sh                         # build release + install + launch
-├── My Commander.app/              # app bundle (Info.plist tracked, binary gitignored)
+├── Synapse Commander.app/              # app bundle (Info.plist tracked, binary gitignored)
 │   └── Contents/
 │       ├── Info.plist
-│       └── MacOS/My Commander     # compiled by run.sh
-└── Sources/MyCommander/
+│       └── MacOS/Synapse Commander     # compiled by run.sh
+└── Sources/SynapseCommander/
     ├── App.swift                  # entry point + NSApplicationDelegate
     ├── ContentView.swift          # top-level layout + key dispatch
     ├── PaneModel.swift            # pane state, sort, selection, cursor
@@ -125,6 +125,6 @@ my-commander/
 
 - The app is unsigned. On first launch macOS Gatekeeper may block it;
   right-click the `.app` in Finder and choose **Open**, or run
-  `xattr -dr com.apple.quarantine "My Commander.app"` and relaunch.
+  `xattr -dr com.apple.quarantine "Synapse Commander.app"` and relaunch.
 - Copy/move operations are synchronous on the main thread — fine for
   typical usage, but large transfers will block the UI.

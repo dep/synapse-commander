@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
     <channel>
-        <title>My Commander</title>
+        <title>Synapse Commander</title>
         <link>https://raw.githubusercontent.com/dep/my-commander/main/appcast.xml</link>
-        <description>Most recent changes to My Commander</description>
+        <description>Most recent changes to Synapse Commander</description>
         <language>en</language>
         <item>
             <title>Version 0.1.7</title>
@@ -13,11 +13,11 @@
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description><![CDATA[
                 <ul>
-                    <li>Renamed app bundle to "My Commander" (with a space).</li>
+                    <li>Renamed app bundle to "Synapse Commander" (with a space).</li>
                     <li>Ctrl+R reloads both panes from disk.</li>
                 </ul>
             ]]></description>
-            <enclosure url="https://github.com/dep/my-commander/releases/download/0.1.7/MyCommander-0.1.7.dmg"
+            <enclosure url="https://github.com/dep/my-commander/releases/download/0.1.7/SynapseCommander-0.1.7.dmg"
                        sparkle:edSignature="V45dP2gif+qW8uarRGfvdRSKie34txJmjcUpTxfpP+RGJAXxNaTnVrysSx5tuqTJzM2HGePd9BaFwdyz/1hpAA=="
                        length="2183344"
                        type="application/octet-stream" />
@@ -35,7 +35,7 @@
                     <li>Fixed single-click lag caused by double-click gesture disambiguation.</li>
                 </ul>
             ]]></description>
-            <enclosure url="https://github.com/dep/my-commander/releases/download/0.1.6/MyCommander-0.1.6.dmg"
+            <enclosure url="https://github.com/dep/my-commander/releases/download/0.1.6/SynapseCommander-0.1.6.dmg"
                        sparkle:edSignature="wHjH68womGJWO/V8KSmC3gxrqEkC1WwhBVOFUlfFCI9DX/LRVf7ny/UUv59uQeFni0qmoLbubZ8offQz/IpmCw=="
                        length="2183241"
                        type="application/octet-stream" />
@@ -51,7 +51,7 @@
                     <li>F3: Quick file viewer for images, video, audio, and text. Navigate files with ↑/↓, dismiss with Esc.</li>
                 </ul>
             ]]></description>
-            <enclosure url="https://github.com/dep/my-commander/releases/download/0.1.5/MyCommander-0.1.5.dmg"
+            <enclosure url="https://github.com/dep/my-commander/releases/download/0.1.5/SynapseCommander-0.1.5.dmg"
                        sparkle:edSignature="rX8dOseVbFW7XwCL1qzQdjFro4He1Apq8HETRnHlcHgDOvqrNAvvq+BRmZLo3AB7HNsWyrWJeKeGZPq/9Y3tAA=="
                        length="2156924"
                        type="application/octet-stream" />
@@ -67,7 +67,7 @@
                     <li>Added Sparkle-based auto-updates with an in-app update banner.</li>
                 </ul>
             ]]></description>
-            <enclosure url="https://github.com/dep/my-commander/releases/download/0.1.4/MyCommander-0.1.4.dmg"
+            <enclosure url="https://github.com/dep/my-commander/releases/download/0.1.4/SynapseCommander-0.1.4.dmg"
                        sparkle:edSignature="eLoCz1XhxrB1dVJksEfgSFb8DX/n3lc973tMToG4vyv+RLyCsvoZBb2B3/Qcc22dVLzDMC4hwuyvh8k7fthcCQ=="
                        length="2151002"
                        type="application/octet-stream" />

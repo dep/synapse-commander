@@ -2,23 +2,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "MyCommander",
+    name: "SynapseCommander",
     platforms: [.macOS(.v14)],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0")
     ],
     targets: [
         .executableTarget(
-            name: "MyCommander",
+            name: "SynapseCommander",
             dependencies: [
                 .product(name: "Sparkle", package: "Sparkle")
             ],
-            path: "Sources/MyCommander"
+            path: "Sources/SynapseCommander"
         ),
         .testTarget(
-            name: "MyCommanderTests",
-            dependencies: ["MyCommander"],
-            path: "Tests/MyCommanderTests"
+            name: "SynapseCommanderTests",
+            dependencies: ["SynapseCommander"],
+            path: "Tests/SynapseCommanderTests"
         )
     ]
 )

@@ -1,20 +1,20 @@
 <!-- Project-specific override. This file was auto-generated from agent-rules originally, -->
 <!-- but has been customized for my-commander's SPM + Sparkle setup. -->
 
-# Export Signed App (My Commander)
+# Export Signed App (Synapse Commander)
 
 ## Description
 
-Build, sign, notarize, and release a new version of My Commander with Sparkle auto-update support.
+Build, sign, notarize, and release a new version of Synapse Commander with Sparkle auto-update support.
 
 ## Naming notes
 
-- App bundle: `My Commander.app` (with a space)
-- Bundle executable inside the app: `My Commander` (with a space) — must match `CFBundleExecutable` in `Info.plist`
-- SPM build product: `.build/release/MyCommander` (no space) — Swift target name is still `MyCommander`
-- DMG filename: `MyCommander-<version>.dmg` (no space) — keeps download URLs ASCII and matches existing release assets
+- App bundle: `Synapse Commander.app` (with a space)
+- Bundle executable inside the app: `Synapse Commander` (with a space) — must match `CFBundleExecutable` in `Info.plist`
+- SPM build product: `.build/release/SynapseCommander` (no space) — Swift target name is still `SynapseCommander`
+- DMG filename: `SynapseCommander-<version>.dmg` (no space) — keeps download URLs ASCII and matches existing release assets
 
-The commands below quote `"My Commander.app"` everywhere because of the embedded space.
+The commands below quote `"Synapse Commander.app"` everywhere because of the embedded space.
 
 ## Prerequisites
 
@@ -45,7 +45,7 @@ tar -xf sparkle.tar.xz
 
 ### 0. Bump the version
 
-Edit `My Commander.app/Contents/Info.plist`:
+Edit `Synapse Commander.app/Contents/Info.plist`:
 
 ```xml
 <key>CFBundleShortVersionString</key>
@@ -57,27 +57,27 @@ Edit `My Commander.app/Contents/Info.plist`:
 ### 1. Build the release binary
 
 ```bash
-APP="My Commander.app"
+APP="Synapse Commander.app"
 swift build -c release && \
-cp -f .build/release/MyCommander "$APP/Contents/MacOS/My Commander"
+cp -f .build/release/SynapseCommander "$APP/Contents/MacOS/Synapse Commander"
 ```
 
 ### 2. Embed Sparkle.framework
 
 ```bash
-APP="My Commander.app"
+APP="Synapse Commander.app"
 BUILD_DIR=".build/arm64-apple-macosx/release"
 [ -d "$BUILD_DIR/Sparkle.framework" ] || BUILD_DIR=".build/release"
 mkdir -p "$APP/Contents/Frameworks"
 rm -rf "$APP/Contents/Frameworks/Sparkle.framework"
 cp -R "$BUILD_DIR/Sparkle.framework" "$APP/Contents/Frameworks/"
-install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/My Commander" 2>/dev/null || true
+install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Synapse Commander" 2>/dev/null || true
 ```
 
 ### 3. Sign (Sparkle framework first, then app)
 
 ```bash
-APP="My Commander.app"
+APP="Synapse Commander.app"
 IDENTITY="Developer ID Application: Danny Peck (299R8V27FZ)"
 
 # Sign Sparkle's XPC helpers and framework first (inside-out signing required)
@@ -94,7 +94,7 @@ codesign --force --timestamp --options runtime --sign "$IDENTITY" \
 
 # Now sign the app itself
 codesign --force --deep --timestamp --options runtime \
-  --entitlements MyCommander.entitlements \
+  --entitlements SynapseCommander.entitlements \
   --sign "$IDENTITY" \
   "$APP"
 
@@ -104,10 +104,10 @@ codesign --verify --deep --strict --verbose=2 "$APP"
 ### 4. Notarize + staple
 
 ```bash
-APP="My Commander.app"
-rm -f /tmp/MyCommander-notarize.zip && \
-ditto -c -k --keepParent "$APP" /tmp/MyCommander-notarize.zip && \
-xcrun notarytool submit /tmp/MyCommander-notarize.zip --keychain-profile "notarytool" --wait && \
+APP="Synapse Commander.app"
+rm -f /tmp/SynapseCommander-notarize.zip && \
+ditto -c -k --keepParent "$APP" /tmp/SynapseCommander-notarize.zip && \
+xcrun notarytool submit /tmp/SynapseCommander-notarize.zip --keychain-profile "notarytool" --wait && \
 xcrun stapler staple "$APP" && \
 spctl --assess --type execute --verbose "$APP"
 ```
@@ -117,24 +117,24 @@ spctl --assess --type execute --verbose "$APP"
 Replace `<version>` with the new version (e.g. `0.1.7`). The DMG filename keeps the no-space form for URL-friendliness.
 
 ```bash
-APP="My Commander.app"
-rm -rf /tmp/MyCommander-dmg-src && mkdir -p /tmp/MyCommander-dmg-src && \
-cp -R "$APP" /tmp/MyCommander-dmg-src/ && \
-rm -f ~/Desktop/MyCommander-<version>.dmg && \
+APP="Synapse Commander.app"
+rm -rf /tmp/SynapseCommander-dmg-src && mkdir -p /tmp/SynapseCommander-dmg-src && \
+cp -R "$APP" /tmp/SynapseCommander-dmg-src/ && \
+rm -f ~/Desktop/SynapseCommander-<version>.dmg && \
 create-dmg \
-  --volname "My Commander" \
-  --volicon "/tmp/MyCommander-dmg-src/My Commander.app/Contents/Resources/MyCommander.icns" \
+  --volname "Synapse Commander" \
+  --volicon "/tmp/SynapseCommander-dmg-src/Synapse Commander.app/Contents/Resources/SynapseCommander.icns" \
   --window-pos 200 120 --window-size 660 400 --icon-size 160 \
-  --icon "My Commander.app" 180 170 --hide-extension "My Commander.app" \
+  --icon "Synapse Commander.app" 180 170 --hide-extension "Synapse Commander.app" \
   --app-drop-link 480 170 \
-  ~/Desktop/MyCommander-<version>.dmg \
-  /tmp/MyCommander-dmg-src/
+  ~/Desktop/SynapseCommander-<version>.dmg \
+  /tmp/SynapseCommander-dmg-src/
 ```
 
 ### 6. Sign the DMG for Sparkle
 
 ```bash
-SIG=$(/tmp/sparkle-bin/bin/sign_update ~/Desktop/MyCommander-<version>.dmg)
+SIG=$(/tmp/sparkle-bin/bin/sign_update ~/Desktop/SynapseCommander-<version>.dmg)
 echo "$SIG"
 # Captures: sparkle:edSignature="..." length="..."
 ```
@@ -152,7 +152,7 @@ Prepend a new `<item>` to `appcast.xml` at the repo root. Use the signature from
   <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
   <description><![CDATA[<release notes HTML>]]></description>
   <enclosure
-    url="https://github.com/dep/my-commander/releases/download/<version>/MyCommander-<version>.dmg"
+    url="https://github.com/dep/my-commander/releases/download/<version>/SynapseCommander-<version>.dmg"
     sparkle:edSignature="<edSignature from sign_update>"
     length="<length from sign_update>"
     type="application/octet-stream" />
@@ -164,15 +164,15 @@ Use `date -u "+%a, %d %b %Y %H:%M:%S +0000"` for `pubDate`.
 ### 8. Commit, push, release
 
 ```bash
-git add "My Commander.app/Contents/Info.plist" \
-        "My Commander.app/Contents/CodeResources" \
-        "My Commander.app/Contents/_CodeSignature/" \
+git add "Synapse Commander.app/Contents/Info.plist" \
+        "Synapse Commander.app/Contents/CodeResources" \
+        "Synapse Commander.app/Contents/_CodeSignature/" \
         appcast.xml && \
 git commit -m "bump version to <version>" && \
 git push
 
 gh release create <version> --title "<version>" --notes "<release notes>" && \
-gh release upload <version> ~/Desktop/MyCommander-<version>.dmg
+gh release upload <version> ~/Desktop/SynapseCommander-<version>.dmg
 ```
 
 **CRITICAL:** `appcast.xml` must be pushed to `main` — Sparkle fetches it from the raw GitHub URL configured in Info.plist (`SUFeedURL`). The DMG URL in the appcast must match the GitHub release asset URL.
@@ -185,7 +185,7 @@ gh release upload <version> ~/Desktop/MyCommander-<version>.dmg
 
 ## Artifacts
 
-- Notarized app: `My Commander.app` (in-repo)
-- DMG: `~/Desktop/MyCommander-<version>.dmg`
+- Notarized app: `Synapse Commander.app` (in-repo)
+- DMG: `~/Desktop/SynapseCommander-<version>.dmg`
 - Appcast: `appcast.xml` (committed to main)
 - GitHub release with DMG attached

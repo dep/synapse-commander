@@ -1,5 +1,5 @@
 import XCTest
-@testable import MyCommander
+@testable import SynapseCommander
 
 @MainActor
 final class PaneModelTests: XCTestCase {

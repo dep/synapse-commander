@@ -4,7 +4,7 @@
 <dict>
 	<key>files</key>
 	<dict>
-		<key>Resources/MyCommander.icns</key>
+		<key>Resources/SynapseCommander.icns</key>
 		<data>
 		8LZ3oOzeq0pZ91s2XZ8mBYxZW+Y=
 		</data>
@@ -20,7 +20,7 @@
 			<key>requirement</key>
 			<string>identifier "org.sparkle-project.Sparkle" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "299R8V27FZ"</string>
 		</dict>
-		<key>Resources/MyCommander.icns</key>
+		<key>Resources/SynapseCommander.icns</key>
 		<dict>
 			<key>hash2</key>
 			<data>

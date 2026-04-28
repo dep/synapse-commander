@@ -26,7 +26,7 @@ final class FavoritesStore: ObservableObject {
                                 in: .userDomainMask,
                                 appropriateFor: nil,
                                 create: true)) ?? fm.homeDirectoryForCurrentUser
-        let dir = base.appendingPathComponent("MyCommander", isDirectory: true)
+        let dir = base.appendingPathComponent("SynapseCommander", isDirectory: true)
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("favorites.json")
     }()

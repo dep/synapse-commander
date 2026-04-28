@@ -1,5 +1,5 @@
 #!/usr/bin/env swift
-// Rasterizes icon.svg at all .iconset sizes and produces MyCommander.icns.
+// Rasterizes icon.svg at all .iconset sizes and produces SynapseCommander.icns.
 //
 //   swift icon/make_icns.swift
 //
@@ -10,8 +10,8 @@ import Foundation
 
 let here = URL(fileURLWithPath: CommandLine.arguments.first ?? ".").deletingLastPathComponent()
 let svg = here.appendingPathComponent("icon.svg")
-let iconset = here.appendingPathComponent("MyCommander.iconset")
-let icns = here.appendingPathComponent("MyCommander.icns")
+let iconset = here.appendingPathComponent("SynapseCommander.iconset")
+let icns = here.appendingPathComponent("SynapseCommander.icns")
 
 try? FileManager.default.removeItem(at: iconset)
 try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
