@@ -6,6 +6,23 @@
         <description>Most recent changes to Synapse Commander</description>
         <language>en</language>
         <item>
+            <title>Version 0.2.0</title>
+            <pubDate>Tue, 28 Apr 2026 08:45:18 +0000</pubDate>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>0.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <ul>
+                    <li>Renamed to Synapse Commander.</li>
+                    <li>App data directory migrated to ~/Library/Application Support/SynapseCommander.</li>
+                </ul>
+            ]]></description>
+            <enclosure url="https://github.com/dep/my-commander/releases/download/0.2.0/SynapseCommander-0.2.0.dmg"
+                       sparkle:edSignature="T6L32NMJJ93+cNgHW18Xd13BuvsPWUoTyQgtZP/qxOBoKSFQn0XCdXkUaCFMxYqNRTp5a29E+W6ezv20UqM4Bw=="
+                       length="2184111"
+                       type="application/octet-stream" />
+        </item>
+        <item>
             <title>Version 0.1.7</title>
             <pubDate>Sat, 25 Apr 2026 12:46:49 +0000</pubDate>
             <sparkle:version>8</sparkle:version>
