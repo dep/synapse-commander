@@ -21,6 +21,7 @@ struct HelpView: View {
                         ("⌘→",               "Open target directory in right pane"),
                         ("⌘G",               "Go to folder by path"),
                         ("Ctrl+R",           "Reload both panes from disk"),
+                        ("⌘⇧.",              "Toggle hidden files"),
                     ])
                     section("Selection", rows: [
                         ("Space",            "Toggle selection on cursor row"),

@@ -209,6 +209,15 @@ struct ContentView: View {
             case Keys.g:
                 showGoTo = true
                 return true
+            case Keys.period:
+                if e.modifiers.contains(.shift) {
+                    let newValue = !left.showHidden
+                    left.showHidden = newValue
+                    right.showHidden = newValue
+                    left.reload(); right.reload()
+                    return true
+                }
+                return false
             default:
                 return false
             }

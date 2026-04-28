@@ -16,6 +16,24 @@ struct Favorite: Identifiable, Codable, Hashable {
     var url: URL { URL(fileURLWithPath: path) }
 }
 
+/// Versioned envelope for settings backups. Currently only carries favorites,
+/// but the shape lets us add more sections later without breaking old files.
+struct SettingsBackup: Codable {
+    var version: Int
+    var favorites: [Favorite]
+}
+
+enum BackupError: Error, LocalizedError {
+    case unsupportedVersion(Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedVersion(let v):
+            return "Backup file uses unsupported version \(v)."
+        }
+    }
+}
+
 @MainActor
 final class FavoritesStore: ObservableObject {
     @Published var items: [Favorite] = []
@@ -48,7 +66,7 @@ final class FavoritesStore: ObservableObject {
 
     func add(path: String, label: String? = nil, preferredKey: String? = nil) -> Favorite {
         let name = label ?? URL(fileURLWithPath: path).lastPathComponent
-        let key = preferredKey.flatMap(normalizeKey) ?? nextFreeKey(preferring: name)
+        let key = preferredKey.flatMap(normalizeKey) ?? nextFreeKey()
         let fav = Favorite(key: key, label: name, path: path)
         items.append(fav)
         save()
@@ -77,6 +95,22 @@ final class FavoritesStore: ObservableObject {
         save()
     }
 
+    func exportData() throws -> Data {
+        let backup = SettingsBackup(version: 1, favorites: items)
+        let enc = JSONEncoder()
+        enc.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try enc.encode(backup)
+    }
+
+    /// Replace current favorites with the contents of `data`. Throws on
+    /// malformed JSON or unsupported versions.
+    func importData(_ data: Data) throws {
+        let backup = try JSONDecoder().decode(SettingsBackup.self, from: data)
+        guard backup.version == 1 else { throw BackupError.unsupportedVersion(backup.version) }
+        items = backup.favorites
+        save()
+    }
+
     func find(byKey key: String) -> Favorite? {
         guard let k = normalizeKey(key) else { return nil }
         return items.first { $0.key == k }
@@ -91,14 +125,10 @@ final class FavoritesStore: ObservableObject {
         return String(c)
     }
 
-    /// Pick a single-char key that isn't in use, preferring the first letter/digit of `hint`.
-    private func nextFreeKey(preferring hint: String) -> String {
+    /// Pick the next unused single-char key, digits first (0-9) then letters (a-z).
+    private func nextFreeKey() -> String {
         let used = Set(items.map { $0.key })
-        for c in hint.lowercased() where c.isLetter || c.isNumber {
-            let k = String(c)
-            if !used.contains(k) { return k }
-        }
-        for c in "abcdefghijklmnopqrstuvwxyz0123456789" {
+        for c in "0123456789abcdefghijklmnopqrstuvwxyz" {
             let k = String(c)
             if !used.contains(k) { return k }
         }

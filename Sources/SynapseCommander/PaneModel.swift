@@ -33,6 +33,7 @@ final class PaneModel: ObservableObject {
     @Published var cursor: URL?                  // focused row
     @Published var sortKey: SortKey = .name
     @Published var sortAscending: Bool = true
+    @Published var showHidden: Bool = false
     /// Anchor URL for shift-selection. nil until a shift-arrow press starts a range.
     var shiftAnchor: URL?
 
@@ -57,9 +58,10 @@ final class PaneModel: ObservableObject {
             .isDirectoryKey, .fileSizeKey, .contentModificationDateKey,
             .isAliasFileKey, .isSymbolicLinkKey
         ]
+        let options: FileManager.DirectoryEnumerationOptions = showHidden ? [] : [.skipsHiddenFiles]
         let contents = (try? fm.contentsOfDirectory(at: directory,
                                                     includingPropertiesForKeys: keys,
-                                                    options: [.skipsHiddenFiles])) ?? []
+                                                    options: options)) ?? []
         var result: [FileEntry] = []
         for url in contents {
             let vals = try? url.resourceValues(forKeys: Set(keys))

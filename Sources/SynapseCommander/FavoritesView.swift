@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 struct FavoritesView: View {
     @ObservedObject var store: FavoritesStore
@@ -11,6 +12,7 @@ struct FavoritesView: View {
     @State private var editLabel: String = ""
     @State private var editKey: String = ""
     @State private var hover: UUID?
+    @State private var alertMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -30,6 +32,14 @@ struct FavoritesView: View {
         )
         .sheet(item: $editing) { fav in
             editSheet(fav)
+        }
+        .alert("Backup", isPresented: Binding(
+            get: { alertMessage != nil },
+            set: { if !$0 { alertMessage = nil } }
+        )) {
+            Button("OK") { alertMessage = nil }
+        } message: {
+            Text(alertMessage ?? "")
         }
     }
 
@@ -136,11 +146,54 @@ struct FavoritesView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            Menu {
+                Button("Export…") { exportFavorites() }
+                Button("Import…") { importFavorites() }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Backup & restore")
             Button("Close") { onDismiss() }
                 .keyboardShortcut(.cancelAction)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    // MARK: - Backup
+
+    private func exportFavorites() {
+        let panel = NSSavePanel()
+        panel.title = "Export Favorites"
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = "synapse-favorites.json"
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let data = try store.exportData()
+            try data.write(to: url)
+        } catch {
+            alertMessage = "Could not export: \(error.localizedDescription)"
+        }
+    }
+
+    private func importFavorites() {
+        let panel = NSOpenPanel()
+        panel.title = "Import Favorites"
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let data = try Data(contentsOf: url)
+            try store.importData(data)
+        } catch {
+            alertMessage = "Could not import: \(error.localizedDescription)"
+        }
     }
 
     @ViewBuilder
