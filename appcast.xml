@@ -6,6 +6,24 @@
         <description>Most recent changes to Synapse Commander</description>
         <language>en</language>
         <item>
+            <title>Version 0.2.1</title>
+            <pubDate>Tue, 28 Apr 2026 09:35:09 +0000</pubDate>
+            <sparkle:version>10</sparkle:version>
+            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <ul>
+                    <li>⌘⇧. toggles hidden files in both panes.</li>
+                    <li>Export and import favorites as a JSON backup via the ⋯ menu in the Favorites modal.</li>
+                    <li>New favorites now get numeric shortcut keys (0–9) by default instead of the first letter of the folder name.</li>
+                </ul>
+            ]]></description>
+            <enclosure url="https://github.com/dep/my-commander/releases/download/0.2.1/SynapseCommander-0.2.1.dmg"
+                       sparkle:edSignature="LEUwZGb96lPiH/jmEizXL0+/8KfFg9VqZlPPa5kdZ6InIKzwCC8wuD6dy0ZTpuzATPbFwh1XUyzrkBdK703FBQ=="
+                       length="2197046"
+                       type="application/octet-stream" />
+        </item>
+        <item>
             <title>Version 0.2.0</title>
             <pubDate>Tue, 28 Apr 2026 08:45:18 +0000</pubDate>
             <sparkle:version>9</sparkle:version>
