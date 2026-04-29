@@ -2,35 +2,35 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleExecutable</key>
-    <string>Synapse Commander</string>
-    <key>CFBundleIconFile</key>
-    <string>SynapseCommander</string>
-    <key>CFBundleIconName</key>
-    <string>SynapseCommander</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.dpeck.mycommander</string>
-    <key>CFBundleName</key>
-    <string>Synapse Commander</string>
-    <key>CFBundleDisplayName</key>
-    <string>Synapse Commander</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>0.2.2</string>
-    <key>CFBundleVersion</key>
-    <string>11</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>14.0</string>
-    <key>NSHighResolutionCapable</key>
-    <true/>
-    <key>NSPrincipalClass</key>
-    <string>NSApplication</string>
-    <key>SUFeedURL</key>
-    <string>https://raw.githubusercontent.com/dep/my-commander/main/appcast.xml</string>
-    <key>SUPublicEDKey</key>
-    <string>Tnoq0NNryfeGcjS0eQ2xfuOuvqf4dRoa3wF86ljVZh4=</string>
-    <key>SUEnableAutomaticChecks</key>
-    <true/>
+	<key>CFBundleDisplayName</key>
+	<string>Synapse Commander</string>
+	<key>CFBundleExecutable</key>
+	<string>Synapse Commander</string>
+	<key>CFBundleIconFile</key>
+	<string>SynapseCommander</string>
+	<key>CFBundleIconName</key>
+	<string>SynapseCommander</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.dpeck.mycommander</string>
+	<key>CFBundleName</key>
+	<string>Synapse Commander</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.2.3</string>
+	<key>CFBundleVersion</key>
+	<string>12</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/dep/my-commander/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>Tnoq0NNryfeGcjS0eQ2xfuOuvqf4dRoa3wF86ljVZh4=</string>
 </dict>
 </plist>
