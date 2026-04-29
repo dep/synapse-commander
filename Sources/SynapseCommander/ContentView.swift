@@ -18,6 +18,9 @@ struct ContentView: View {
     @State private var promptText: String = ""
     @State private var errorMessage: String?
 
+    // in-progress batch copy/move state (for conflict resolution)
+    @State private var pendingBatch: BatchOp?
+
     // type-ahead state
     @State private var typeAhead: String = ""
     @State private var typeAheadExpires: Date = .distantPast
@@ -30,6 +33,7 @@ struct ContentView: View {
         case confirmCopy(sources: [URL], dest: URL)
         case confirmMove(sources: [URL], dest: URL)
         case confirmDelete(sources: [URL])
+        case resolveConflict(name: String, isMove: Bool)
         var id: String {
             switch self {
             case .rename(let u): return "rename:\(u.path)"
@@ -37,8 +41,17 @@ struct ContentView: View {
             case .confirmCopy: return "copy"
             case .confirmMove: return "move"
             case .confirmDelete: return "delete"
+            case .resolveConflict(let n, _): return "conflict:\(n)"
             }
         }
+    }
+
+    struct BatchOp {
+        enum Kind { case copy, move }
+        let kind: Kind
+        var remaining: [URL]
+        let dest: URL
+        var applyToAll: ConflictResolution?
     }
 
     var activeModel: PaneModel { active == .left ? left : right }
@@ -397,19 +410,74 @@ struct ContentView: View {
     }
 
     private func performCopy(_ sources: [URL], _ dest: URL) {
-        do {
-            try FileOps.copy(sources, to: dest)
-            left.reload(); right.reload()
-            activeModel.selection.removeAll()
-        } catch { errorMessage = error.localizedDescription }
+        startBatch(BatchOp(kind: .copy, remaining: sources, dest: dest, applyToAll: nil))
     }
 
     private func performMove(_ sources: [URL], _ dest: URL) {
+        startBatch(BatchOp(kind: .move, remaining: sources, dest: dest, applyToAll: nil))
+    }
+
+    private func startBatch(_ batch: BatchOp) {
+        pendingBatch = batch
+        runBatch()
+    }
+
+    /// Drains pendingBatch one item at a time. Pauses (without clearing
+    /// pendingBatch) when a conflict needs user resolution; resumes via
+    /// `resolveConflictAndContinue`.
+    private func runBatch() {
+        while var batch = pendingBatch, let src = batch.remaining.first {
+            let exists = FileOps.destinationExists(for: src, in: batch.dest)
+            if exists, batch.applyToAll == nil {
+                prompt = .resolveConflict(name: src.lastPathComponent,
+                                          isMove: batch.kind == .move)
+                return
+            }
+            batch.remaining.removeFirst()
+            pendingBatch = batch
+            let resolution: ConflictResolution = exists ? (batch.applyToAll ?? .rename) : .rename
+            do {
+                switch batch.kind {
+                case .copy: try FileOps.copyOne(src, to: batch.dest, resolution: resolution)
+                case .move: try FileOps.moveOne(src, to: batch.dest, resolution: resolution)
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+                pendingBatch = nil
+                left.reload(); right.reload()
+                return
+            }
+        }
+        pendingBatch = nil
+        left.reload(); right.reload()
+        activeModel.selection.removeAll()
+    }
+
+    private func resolveConflictAndContinue(_ resolution: ConflictResolution, applyToAll: Bool) {
+        guard var batch = pendingBatch, let src = batch.remaining.first else {
+            pendingBatch = nil
+            return
+        }
+        if applyToAll { batch.applyToAll = resolution }
+        batch.remaining.removeFirst()
+        pendingBatch = batch
         do {
-            try FileOps.move(sources, to: dest)
+            switch batch.kind {
+            case .copy: try FileOps.copyOne(src, to: batch.dest, resolution: resolution)
+            case .move: try FileOps.moveOne(src, to: batch.dest, resolution: resolution)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            pendingBatch = nil
             left.reload(); right.reload()
-            activeModel.selection.removeAll()
-        } catch { errorMessage = error.localizedDescription }
+            return
+        }
+        runBatch()
+    }
+
+    private func cancelBatch() {
+        pendingBatch = nil
+        left.reload(); right.reload()
     }
 
     private func performRename(_ url: URL, to newName: String) {
@@ -453,17 +521,10 @@ struct ContentView: View {
         guard !filtered.isEmpty else { return }
         let mods = NSEvent.modifierFlags
         let isCopy = mods.contains(.command) || mods.contains(.option)
-        do {
-            if isCopy {
-                try FileOps.copy(filtered, to: destination)
-            } else {
-                try FileOps.move(filtered, to: destination)
-            }
-            left.reload(); right.reload()
-            left.selection.removeAll(); right.selection.removeAll()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        startBatch(BatchOp(kind: isCopy ? .copy : .move,
+                           remaining: filtered,
+                           dest: destination,
+                           applyToAll: nil))
     }
 
     private func performMkdir(_ name: String) {
@@ -500,15 +561,19 @@ struct ContentView: View {
             ConfirmView(title: "Copy",
                         message: "Copy \(srcs.count) item\(srcs.count == 1 ? "" : "s") to\n\(dest.path)?",
                         confirmLabel: "Copy") { confirmed in
-                if confirmed { performCopy(srcs, dest) }
                 prompt = nil
+                if confirmed {
+                    DispatchQueue.main.async { performCopy(srcs, dest) }
+                }
             }
         case .confirmMove(let srcs, let dest):
             ConfirmView(title: "Move",
                         message: "Move \(srcs.count) item\(srcs.count == 1 ? "" : "s") to\n\(dest.path)?",
                         confirmLabel: "Move") { confirmed in
-                if confirmed { performMove(srcs, dest) }
                 prompt = nil
+                if confirmed {
+                    DispatchQueue.main.async { performMove(srcs, dest) }
+                }
             }
         case .confirmDelete(let srcs):
             let names = srcs.prefix(5).map { $0.lastPathComponent }.joined(separator: "\n")
@@ -518,6 +583,21 @@ struct ContentView: View {
                         confirmLabel: "Delete") { confirmed in
                 if confirmed { performDelete(srcs) }
                 prompt = nil
+            }
+        case .resolveConflict(let name, let isMove):
+            let remaining = pendingBatch?.remaining.count ?? 0
+            ConflictResolveView(name: name,
+                                isMove: isMove,
+                                showApplyToAll: remaining > 1) { choice in
+                prompt = nil
+                switch choice {
+                case .cancel:
+                    cancelBatch()
+                case .resolve(let resolution, let all):
+                    DispatchQueue.main.async {
+                        resolveConflictAndContinue(resolution, applyToAll: all)
+                    }
+                }
             }
         }
     }
@@ -569,5 +649,43 @@ private struct ConfirmView: View {
         }
         .padding(20)
         .frame(width: 420)
+    }
+}
+
+enum ConflictChoice {
+    case cancel
+    case resolve(ConflictResolution, applyToAll: Bool)
+}
+
+private struct ConflictResolveView: View {
+    let name: String
+    let isMove: Bool
+    let showApplyToAll: Bool
+    let done: (ConflictChoice) -> Void
+
+    @State private var applyToAll: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Item Already Exists").font(.headline)
+            Text("\"\(name)\" already exists at the destination.\nWhat would you like to do?")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+            if showApplyToAll {
+                Toggle("Apply to all remaining conflicts", isOn: $applyToAll)
+                    .toggleStyle(.checkbox)
+            }
+            HStack {
+                Button("Cancel") { done(.cancel) }
+                    .keyboardShortcut(.cancelAction)
+                Spacer()
+                Button("Skip") { done(.resolve(.skip, applyToAll: applyToAll)) }
+                Button("Overwrite") { done(.resolve(.overwrite, applyToAll: applyToAll)) }
+                Button("Rename") { done(.resolve(.rename, applyToAll: applyToAll)) }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+        .frame(width: 460)
     }
 }

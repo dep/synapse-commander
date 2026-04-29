@@ -140,6 +140,96 @@ final class FileOpsTests: XCTestCase {
         XCTAssertFalse(fm.fileExists(atPath: new.path))
     }
 
+    // MARK: conflict resolution
+
+    func testCopyOneOverwriteReplacesExisting() throws {
+        let src = try makeDir("src")
+        let dst = try makeDir("dst")
+        _ = try makeFile("a.txt", contents: "old", in: dst)
+        let new = try makeFile("a.txt", contents: "new", in: src)
+
+        let result = try FileOps.copyOne(new, to: dst, resolution: .overwrite)
+
+        XCTAssertEqual(result?.lastPathComponent, "a.txt")
+        XCTAssertEqual(try String(contentsOf: dst.appendingPathComponent("a.txt"), encoding: .utf8), "new")
+        XCTAssertFalse(fm.fileExists(atPath: dst.appendingPathComponent("a 2.txt").path))
+    }
+
+    func testCopyOneSkipLeavesExisting() throws {
+        let src = try makeDir("src")
+        let dst = try makeDir("dst")
+        _ = try makeFile("a.txt", contents: "old", in: dst)
+        let new = try makeFile("a.txt", contents: "new", in: src)
+
+        let result = try FileOps.copyOne(new, to: dst, resolution: .skip)
+
+        XCTAssertNil(result)
+        XCTAssertEqual(try String(contentsOf: dst.appendingPathComponent("a.txt"), encoding: .utf8), "old")
+        XCTAssertFalse(fm.fileExists(atPath: dst.appendingPathComponent("a 2.txt").path))
+        XCTAssertTrue(fm.fileExists(atPath: new.path), "skip leaves source intact")
+    }
+
+    func testCopyOneRenameAddsSuffix() throws {
+        let src = try makeDir("src")
+        let dst = try makeDir("dst")
+        _ = try makeFile("a.txt", contents: "old", in: dst)
+        let new = try makeFile("a.txt", contents: "new", in: src)
+
+        let result = try FileOps.copyOne(new, to: dst, resolution: .rename)
+
+        XCTAssertEqual(result?.lastPathComponent, "a 2.txt")
+        XCTAssertEqual(try String(contentsOf: dst.appendingPathComponent("a.txt"), encoding: .utf8), "old")
+        XCTAssertEqual(try String(contentsOf: dst.appendingPathComponent("a 2.txt"), encoding: .utf8), "new")
+    }
+
+    func testMoveOneOverwriteReplacesExistingAndRemovesSource() throws {
+        let src = try makeDir("src")
+        let dst = try makeDir("dst")
+        _ = try makeFile("a.txt", contents: "old", in: dst)
+        let new = try makeFile("a.txt", contents: "new", in: src)
+
+        let result = try FileOps.moveOne(new, to: dst, resolution: .overwrite)
+
+        XCTAssertEqual(result?.lastPathComponent, "a.txt")
+        XCTAssertEqual(try String(contentsOf: dst.appendingPathComponent("a.txt"), encoding: .utf8), "new")
+        XCTAssertFalse(fm.fileExists(atPath: new.path), "source removed after overwrite move")
+    }
+
+    func testMoveOneSkipLeavesBothInPlace() throws {
+        let src = try makeDir("src")
+        let dst = try makeDir("dst")
+        _ = try makeFile("a.txt", contents: "old", in: dst)
+        let new = try makeFile("a.txt", contents: "new", in: src)
+
+        let result = try FileOps.moveOne(new, to: dst, resolution: .skip)
+
+        XCTAssertNil(result)
+        XCTAssertEqual(try String(contentsOf: dst.appendingPathComponent("a.txt"), encoding: .utf8), "old")
+        XCTAssertTrue(fm.fileExists(atPath: new.path), "skip leaves source intact")
+    }
+
+    func testCopyOneNoConflictUsesDirectName() throws {
+        let src = try makeDir("src")
+        let dst = try makeDir("dst")
+        let new = try makeFile("a.txt", contents: "new", in: src)
+
+        let result = try FileOps.copyOne(new, to: dst, resolution: .overwrite)
+
+        XCTAssertEqual(result?.lastPathComponent, "a.txt")
+        XCTAssertTrue(fm.fileExists(atPath: dst.appendingPathComponent("a.txt").path))
+    }
+
+    func testDestinationExistsDetectsCollision() throws {
+        let src = try makeDir("src")
+        let dst = try makeDir("dst")
+        _ = try makeFile("a.txt", in: dst)
+        let new = try makeFile("a.txt", in: src)
+        let other = try makeFile("b.txt", in: src)
+
+        XCTAssertTrue(FileOps.destinationExists(for: new, in: dst))
+        XCTAssertFalse(FileOps.destinationExists(for: other, in: dst))
+    }
+
     // MARK: rename
 
     func testRenameFile() throws {
