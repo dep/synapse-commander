@@ -16,6 +16,10 @@ final class UpdaterViewModel: NSObject, ObservableObject, SPUUpdaterDelegate {
         )
     }
 
+    func checkForUpdates() {
+        controller.updater.checkForUpdates()
+    }
+
     func checkInBackground() {
         controller.updater.checkForUpdateInformation()
     }

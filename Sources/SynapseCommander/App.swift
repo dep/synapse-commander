@@ -18,6 +18,11 @@ struct SynapseCommanderApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified(showsTitle: true))
+        .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") { updater.checkForUpdates() }
+            }
+        }
     }
 }
 
