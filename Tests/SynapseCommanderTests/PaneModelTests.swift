@@ -186,6 +186,44 @@ final class PaneModelTests: XCTestCase {
         XCTAssertEqual(model.selection, Set([items[0], items[1], items[2]]))
     }
 
+    func testShiftRangeAfterPlainMoveAppendsToPriorSelection() throws {
+        // First range: items[0..1] via shift-down twice.
+        let (model, items) = try seedStandardFixture()
+        model.cursor = items[0]
+        model.moveCursorExtending(delta: 1)
+        XCTAssertEqual(model.selection, Set([items[0], items[1]]))
+
+        // User releases shift and moves the cursor with a plain arrow.
+        model.clearShiftRange()
+        model.moveCursor(delta: 1) // cursor now on items[2]
+        XCTAssertEqual(model.cursor, items[2])
+        // Plain move does not alter the existing selection.
+        XCTAssertEqual(model.selection, Set([items[0], items[1]]))
+
+        // Second shift-range: extending from items[2] should append to items[0..1].
+        model.moveCursorExtending(delta: 1) // cursor moves to items[3]
+        XCTAssertEqual(model.cursor, items[3])
+        XCTAssertEqual(model.selection,
+                       Set([items[0], items[1], items[2], items[3]]),
+                       "second shift-range should append to the prior selection, not replace it")
+    }
+
+    func testShiftRangeShrinksWithinCurrentRangeOnly() throws {
+        // After establishing a base range, shrinking the *current* shift-range
+        // must not eat into the base.
+        let (model, items) = try seedStandardFixture()
+        // Pre-select items[0] via cmd-toggle (sim).
+        model.toggleSelect(items[0])
+        // Now start a shift-range from items[2] downward.
+        model.cursor = items[2]
+        model.moveCursorExtending(delta: 1) // selects items[2..3], unioned with items[0]
+        XCTAssertEqual(model.selection, Set([items[0], items[2], items[3]]))
+
+        // Reverse direction: shrink range back up; should still include items[0].
+        model.moveCursorExtending(delta: -1) // cursor back to items[2], range = items[2]
+        XCTAssertEqual(model.selection, Set([items[0], items[2]]))
+    }
+
     // MARK: actionTargets
 
     func testActionTargetsReturnsSelectionWhenPresent() throws {

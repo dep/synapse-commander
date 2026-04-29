@@ -298,22 +298,22 @@ struct ContentView: View {
             }
             return true
         case Keys.up:
-            typeAhead = ""; activeModel.shiftAnchor = nil
+            typeAhead = ""; activeModel.clearShiftRange()
             activeModel.moveCursor(delta: -1); return true
         case Keys.down:
-            typeAhead = ""; activeModel.shiftAnchor = nil
+            typeAhead = ""; activeModel.clearShiftRange()
             activeModel.moveCursor(delta: 1); return true
         case Keys.home:
-            typeAhead = ""; activeModel.shiftAnchor = nil
+            typeAhead = ""; activeModel.clearShiftRange()
             activeModel.moveCursorToFirst(); return true
         case Keys.end:
-            typeAhead = ""; activeModel.shiftAnchor = nil
+            typeAhead = ""; activeModel.clearShiftRange()
             activeModel.moveCursorToLast(); return true
         case Keys.pageUp:
-            typeAhead = ""; activeModel.shiftAnchor = nil
+            typeAhead = ""; activeModel.clearShiftRange()
             activeModel.moveCursor(delta: -pageSize); return true
         case Keys.pageDown:
-            typeAhead = ""; activeModel.shiftAnchor = nil
+            typeAhead = ""; activeModel.clearShiftRange()
             activeModel.moveCursor(delta: pageSize); return true
         case Keys.enter:
             typeAhead = ""

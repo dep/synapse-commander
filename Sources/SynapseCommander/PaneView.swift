@@ -173,14 +173,17 @@ struct PaneView: View {
         if shift && !entry.isParent {
             let anchor = model.shiftAnchor ?? model.cursor ?? entry.url
             model.shiftAnchor = anchor
+            model.shiftSelectionBase = []
             model.selectRange(from: anchor, to: entry.url)
             model.cursor = entry.url
         } else if cmd && !entry.isParent {
             model.toggleSelect(entry.url)
             model.cursor = entry.url
             model.shiftAnchor = entry.url
+            model.shiftSelectionBase = model.selection
         } else {
             model.shiftAnchor = entry.url
+            model.shiftSelectionBase = model.selection
             model.cursor = entry.url
         }
     }

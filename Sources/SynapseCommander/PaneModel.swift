@@ -36,6 +36,16 @@ final class PaneModel: ObservableObject {
     @Published var showHidden: Bool = false
     /// Anchor URL for shift-selection. nil until a shift-arrow press starts a range.
     var shiftAnchor: URL?
+    /// Selection snapshot taken when a new shift-arrow range begins. The active
+    /// shift range is unioned with this so previously-selected ranges survive.
+    var shiftSelectionBase: Set<URL> = []
+
+    /// Drop the active shift-range. Call when an unmodified arrow / Home / End
+    /// signals the user has ended the current range.
+    func clearShiftRange() {
+        shiftAnchor = nil
+        shiftSelectionBase = []
+    }
 
     init(directory: URL) {
         self.directory = directory
@@ -130,6 +140,7 @@ final class PaneModel: ObservableObject {
         directory = url
         selection.removeAll()
         cursor = nil
+        clearShiftRange()
         reload()
     }
 
@@ -170,23 +181,32 @@ final class PaneModel: ObservableObject {
     /// to the new cursor position. Parent ".." row is never selected.
     func moveCursorExtending(delta: Int) {
         guard !entries.isEmpty else { return }
-        if shiftAnchor == nil { shiftAnchor = cursor }
+        beginShiftRangeIfNeeded()
         moveCursor(delta: delta)
         applyShiftSelection()
     }
 
     func moveCursorExtendingToFirst() {
         guard !entries.isEmpty else { return }
-        if shiftAnchor == nil { shiftAnchor = cursor }
+        beginShiftRangeIfNeeded()
         moveCursorToFirst()
         applyShiftSelection()
     }
 
     func moveCursorExtendingToLast() {
         guard !entries.isEmpty else { return }
-        if shiftAnchor == nil { shiftAnchor = cursor }
+        beginShiftRangeIfNeeded()
         moveCursorToLast()
         applyShiftSelection()
+    }
+
+    /// Start a fresh shift-range from the current cursor, preserving the
+    /// existing selection as the base so subsequent shift-arrows append.
+    private func beginShiftRangeIfNeeded() {
+        if shiftAnchor == nil {
+            shiftAnchor = cursor
+            shiftSelectionBase = selection
+        }
     }
 
     private func applyShiftSelection() {
@@ -196,7 +216,7 @@ final class PaneModel: ObservableObject {
         else { return }
         let (lo, hi) = aIdx <= cIdx ? (aIdx, cIdx) : (cIdx, aIdx)
         let range = entries[lo...hi].filter { !$0.isParent }.map { $0.url }
-        selection = Set(range)
+        selection = shiftSelectionBase.union(range)
     }
 
     func moveCursorToFirst() {
